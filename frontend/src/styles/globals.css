@@ -1,0 +1,198 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-gradient-to-br from-navy-50 to-blue-50 font-baloo text-navy-dark;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════
+   GLASSMORPHISM UTILITIES
+═══════════════════════════════════════ */
+
+.glass {
+  @apply backdrop-blur-lg bg-white/10 border border-white/20;
+}
+
+.glass-light {
+  @apply backdrop-blur-md bg-white/5 border border-white/10;
+}
+
+.glass-card {
+  @apply backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl;
+}
+
+.glass-hover {
+  @apply transition-all duration-300 hover:bg-white/15 hover:border-white/30;
+}
+
+/* Glow effects for glassmorphism */
+.glow-saffron {
+  box-shadow: 0 0 40px rgba(255, 107, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.glow-green {
+  box-shadow: 0 0 40px rgba(0, 200, 130, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* ═══════════════════════════════════════
+   ANIMATED BACKGROUNDS
+═══════════════════════════════════════ */
+
+.animated-gradient {
+  background: linear-gradient(135deg, #0D1B2A 0%, #1A2F45 50%, #0F2940 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(255, 107, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 107, 0, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.radial-glow {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, current-color, transparent 70%);
+  filter: blur(40px);
+}
+
+/* ═══════════════════════════════════════
+   SMOOTH TRANSITIONS
+═══════════════════════════════════════ */
+
+.transition-smooth {
+  @apply transition-all duration-300 ease-out;
+}
+
+.transition-smooth-lg {
+  @apply transition-all duration-500 ease-out;
+}
+
+/* ═══════════════════════════════════════
+   CUSTOM SCROLLBAR
+═══════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 107, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 0, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 0, 0.5);
+}
+
+/* ═══════════════════════════════════════
+   UTILITY CLASSES
+═══════════════════════════════════════ */
+
+/* Text visibility utilities for dark backgrounds */
+.text-light {
+  @apply text-white;
+}
+
+.text-light-muted {
+  @apply text-white/80;
+}
+
+.text-light-secondary {
+  @apply text-white/60;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #FF6B00, #00C882);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+.blur-md {
+  backdrop-filter: blur(10px);
+}
+
+.blur-lg {
+  backdrop-filter: blur(20px);
+}
+
+/* Status badge colors */
+.badge-red {
+  @apply bg-red-50 text-red-600 border border-red-200;
+}
+
+.badge-yellow {
+  @apply bg-yellow-50 text-yellow-600 border border-yellow-200;
+}
+
+.badge-green {
+  @apply bg-green-50 text-green-600 border border-green-200;
+}
+
+.badge-blue {
+  @apply bg-blue-50 text-blue-600 border border-blue-200;
+}
+
+/* ═══════════════════════════════════════
+   FORM STYLES
+═══════════════════════════════════════ */
+
+input, textarea, select {
+  @apply font-baloo transition-colors duration-200;
+}
+
+input:focus, textarea:focus, select:focus {
+  @apply outline-none ring-2 ring-saffron/30 ring-offset-0;
+}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE TEXT
+═══════════════════════════════════════ */
+
+@layer components {
+  .heading-xl {
+    @apply text-4xl md:text-5xl font-bold font-baloo;
+  }
+
+  .heading-lg {
+    @apply text-3xl md:text-4xl font-bold font-baloo;
+  }
+
+  .heading-md {
+    @apply text-2xl md:text-3xl font-bold font-baloo;
+  }
+
+  .heading-sm {
+    @apply text-lg md:text-xl font-bold font-baloo;
+  }
+
+  .text-mono-sm {
+    @apply text-xs font-mono font-semibold;
+  }
+}
