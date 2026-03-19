@@ -1,5 +1,5 @@
 """
-Seed the database with test data for Smart P-CRM
+Seed MongoDB Atlas database with test data for Smart P-CRM
 
 Run this script after starting MongoDB:
     python seed_data.py
@@ -11,6 +11,7 @@ from bson import ObjectId
 import random
 
 from db.connection import connect_db, close_db, get_db
+from departments import DELHI_DEPARTMENTS
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -32,46 +33,50 @@ def seed_database():
     print("\n🗑️  Clearing existing data...")
     db["users"].delete_many({})
     db["complaints"].delete_many({})
+    db["departments"].delete_many({})
+    db["notifications"].delete_many({})
+    db["reraise_history"].delete_many({})
     
-    # Create test users
+    # Create test users with specific credentials
     print("\n👥 Creating test users...")
     
     users = [
+        # Main test users
         {
-            "name": "John Citizen",
-            "email": "citizen@example.com",
+            "name": "Test Citizen",
+            "email": "citizen@test.com",
             "phone": "9876543210",
-            "password_hash": hash_password("citizen123"),
+            "password_hash": hash_password("pass123"),
             "role": "citizen",
             "department": None,
             "is_active": True,
             "created_at": datetime.now(timezone.utc)
         },
         {
-            "name": "Alice Admin",
-            "email": "admin@example.com",
+            "name": "DJB Admin",
+            "email": "admin@djb.com",
             "phone": "9876543211",
-            "password_hash": hash_password("admin123"),
+            "password_hash": hash_password("pass123"),
             "role": "admin",
-            "department": "Public Works",
+            "department": "jal_board",
             "is_active": True,
             "created_at": datetime.now(timezone.utc)
         },
         {
-            "name": "Bob Worker",
-            "email": "worker@example.com",
+            "name": "DJB Worker",
+            "email": "worker@djb.com",
             "phone": "9876543212",
-            "password_hash": hash_password("worker123"),
+            "password_hash": hash_password("pass123"),
             "role": "worker",
-            "department": "Field Operations",
+            "department": "jal_board",
             "is_active": True,
             "created_at": datetime.now(timezone.utc)
         },
         {
             "name": "Super Admin",
-            "email": "superadmin@example.com",
+            "email": "super@pcrm.com",
             "phone": "9876543213",
-            "password_hash": hash_password("superadmin123"),
+            "password_hash": hash_password("pass123"),
             "role": "superadmin",
             "department": None,
             "is_active": True,
@@ -79,16 +84,56 @@ def seed_database():
         }
     ]
     
+    # Create one admin user for each of the 15 Delhi departments
+    dept_admin_credentials = []
+    for idx, dept in enumerate(DELHI_DEPARTMENTS, start=1):
+        dept_id = f"DA{str(idx).zfill(3)}"  # DA001, DA002, etc.
+        admin_email = f"admin_{dept['id']}@delhi.gov.in"
+        admin_password = "pass123"
+        admin_name = f"{dept['name']} Admin"
+        
+        users.append({
+            "name": admin_name,
+            "email": admin_email,
+            "phone": f"9876543{500 + idx}",
+            "password_hash": hash_password(admin_password),
+            "role": "admin",
+            "department": dept['id'],
+            "dept_id": dept_id,
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc)
+        })
+        
+        # Store credentials for display
+        dept_admin_credentials.append({
+            "dept_name": dept['name'],
+            "dept_id": dept['id'],
+            "admin_id": dept_id,
+            "email": admin_email,
+            "password": admin_password
+        })
+    
+    # Add 2 worker users
+    for i in range(2):
+        users.append({
+            "name": f"Field Worker {i+2}",
+            "email": f"worker{i+2}@pcrm.com",
+            "phone": f"98765432{20+i}",
+            "password_hash": hash_password("pass123"),
+            "role": "worker",
+            "department": random.choice([d['id'] for d in DELHI_DEPARTMENTS]),
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc)
+        })
+    
     user_result = db["users"].insert_many(users)
     citizen_id = str(user_result.inserted_ids[0])
     worker_id = str(user_result.inserted_ids[2])
     
-    print(f"✓ Created {len(users)} users")
-    print(f"  - Citizen ID: {citizen_id}")
-    print(f"  - Worker ID: {worker_id}")
+    print(f"✓ Created {len(users)} users (4 test + 15 dept admins + 2 workers)")
     
     # Sample complaints
-    print("\n📋 Creating sample complaints...")
+    print("📋 Creating sample complaints...")
     
     complaint_texts = [
         "Large pothole on Main Street causing traffic hazard",
@@ -133,25 +178,44 @@ def seed_database():
     
     print(f"✓ Created {len(complaints)} complaints")
     
-    # Print summary
-    print("\n" + "="*60)
-    print("📊 SEED DATA SUMMARY")
-    print("="*60)
+    # Print detailed summary
+    print("\n" + "="*80)
+    print("📊 SEED DATA SUMMARY - MongoDB Atlas")
+    print("="*80)
     
-    print("\n🔐 TEST ACCOUNTS:")
-    print("-" * 60)
+    print("\n✅ DATABASE COLLECTIONS:")
+    print("-" * 80)
+    for collection in ["users", "complaints", "notifications", "departments", "reraise_history"]:
+        count = db[collection].count_documents({})
+        print(f"  {collection:25} | {count:5} documents")
+    
+    users_count = db["users"].count_documents({})
+    complaints_count = db["complaints"].count_documents({})
+    
+    print(f"\n🔐 TEST ACCOUNTS:")
+    print("-" * 80)
     accounts = [
-        ("Citizen", "citizen@example.com", "citizen123"),
-        ("Admin", "admin@example.com", "admin123"),
-        ("Worker", "worker@example.com", "worker123"),
-        ("SuperAdmin", "superadmin@example.com", "superadmin123")
+        ("Citizen", "citizen@test.com", "pass123"),
+        ("DJB Admin", "admin@djb.com", "pass123"),
+        ("DJB Worker", "worker@djb.com", "pass123"),
+        ("SuperAdmin", "super@pcrm.com", "pass123")
     ]
     
     for role, email, password in accounts:
         print(f"  {role:15} | {email:30} | {password}")
     
-    print("\n✓ Database seeded successfully!")
-    print("="*60 + "\n")
+    print("\n🏛️  DEPARTMENT ADMIN ACCOUNTS (15 Delhi Departments):")
+    print("-" * 80)
+    print(f"  {'Department':40} | {'Email':35} | {'Password'}")
+    print("-" * 80)
+    for cred in dept_admin_credentials:
+        print(f"  {cred['dept_name']:40} | {cred['email']:35} | {cred['password']}")
+    
+    print("\n" + "="*80)
+    print(f"✅ Database seeded successfully!")
+    print(f"   Total Users: {users_count}")
+    print(f"   Total Complaints: {complaints_count}")
+    print("="*80 + "\n")
     
     close_db()
 
@@ -161,4 +225,6 @@ if __name__ == "__main__":
         seed_database()
     except Exception as e:
         print(f"\n❌ Error seeding database: {str(e)}")
+        import traceback
+        traceback.print_exc()
         close_db()

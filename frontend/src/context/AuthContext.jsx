@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useCallback, useState } from 'react';
-import { loginRequest } from '../api/auth';
+import { loginRequest, verifyTokenRequest } from '../api/auth';
 
 const AuthContext = createContext(null);
 
@@ -10,7 +10,10 @@ const parseRole = (value) => {
 
   if (normalized === 'superadmin') return 'superadmin';
   if (normalized === 'admin') return 'admin';
+  if (normalized === 'deptadmin') return 'dept_admin';
+  if (normalized === 'departmentadmin') return 'dept_admin';
   if (normalized === 'worker') return 'worker';
+  if (normalized === 'fieldworker') return 'worker';
   if (normalized === 'citizen') return 'citizen';
 
   return normalized;
@@ -23,6 +26,48 @@ export function AuthProvider({ children }) {
     return raw ? JSON.parse(raw) : null;
   });
   const [role, setRole] = useState(parseRole(localStorage.getItem('role') || user?.role));
+  const [isVerifying, setIsVerifying] = useState(true);
+
+  // Verify token on app load
+  useEffect(() => {
+    const verifyStoredToken = async () => {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      const storedRole = localStorage.getItem('role');
+
+      if (storedToken) {
+        try {
+          const response = await verifyTokenRequest(storedToken);
+          if (response?.data) {
+            // Token is valid, keep the stored data
+            setToken(storedToken);
+            setUser(storedUser ? JSON.parse(storedUser) : response.data.user);
+            setRole(parseRole(storedRole || response.data.role));
+          } else {
+            // Token is invalid, clear storage
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('role');
+            setToken('');
+            setUser(null);
+            setRole('');
+          }
+        } catch (error) {
+          console.error('Token verification failed:', error);
+          // Token verification failed, clear storage
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('role');
+          setToken('');
+          setUser(null);
+          setRole('');
+        }
+      }
+      setIsVerifying(false);
+    };
+
+    verifyStoredToken();
+  }, []);
 
   useEffect(() => {
     if (token) {
@@ -48,6 +93,14 @@ export function AuthProvider({ children }) {
     }
   }, [role]);
 
+  useEffect(() => {
+    if (user?.phone) {
+      localStorage.setItem('phone', user.phone);
+    } else {
+      localStorage.removeItem('phone');
+    }
+  }, [user?.phone]);
+
   const login = async (email, password) => {
     const response = await loginRequest(email, password);
     const responseData = response?.data || {};
@@ -63,6 +116,8 @@ export function AuthProvider({ children }) {
       role: responseData.role,
       id: responseData.id || responseData.user_id,
       name: responseData.name,
+      phone: responseData.phone || '',
+      department: responseData.department || '',
     };
 
     const nextRole = parseRole(responseData.role || responseData.user?.role || nextUser?.role);
@@ -90,6 +145,11 @@ export function AuthProvider({ children }) {
     setToken('');
     setUser(null);
     setRole('');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('role');
+    localStorage.removeItem('phone');
+    window.location.href = '/login';
   };
 
   const hasRole = useCallback((roles) => {
@@ -112,8 +172,9 @@ export function AuthProvider({ children }) {
       logout,
       hasRole,
       isAuthenticated: Boolean(token),
+      isVerifying,
     }),
-    [user, token, role, userId, hasRole]
+    [user, token, role, userId, hasRole, isVerifying]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

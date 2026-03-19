@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from datetime import datetime, timezone
 from bson import ObjectId
-import requests
+import httpx
 import os
 from dotenv import load_dotenv
 
@@ -12,6 +12,7 @@ from models.complaint import (
     ComplaintStatus, ComplaintUrgency
 )
 from middleware.auth_middleware import get_current_user, role_required
+from departments import CATEGORY_TO_DEPT
 
 load_dotenv()
 
@@ -25,20 +26,21 @@ def convert_to_response(complaint_doc):
     return complaint_doc
 
 
-def call_ml_service(complaint_text: str):
-    """Call ML service to predict sentiment and urgency"""
+async def call_ml_service(complaint_text: str):
+    """Call ML service asynchronously to predict sentiment and urgency"""
     try:
-        response = requests.post(
-            f"{ML_SERVICE_URL}/predict",
-            json={"text": complaint_text},
-            timeout=5
-        )
-        if response.status_code == 200:
-            return response.json()
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.post(
+                f"{ML_SERVICE_URL}/predict",
+                json={"text": complaint_text}
+            )
+            if response.status_code == 200:
+                return response.json()
     except Exception as e:
         print(f"ML Service error: {str(e)}")
     
-    return {"sentiment": None, "predicted_urgency": None}
+    # Fallback to safe defaults if ML service is down
+    return {"sentiment": "neutral", "predicted_urgency": "medium"}
 
 
 @router.post("/submit")
@@ -49,20 +51,37 @@ async def submit_complaint(
     """Submit new complaint and get ML predictions"""
     db = get_db()
     
-    # Call ML service for predictions
-    ml_result = call_ml_service(complaint_data.text)
+    # Get current user info for pre-fill data
+    current_user_doc = db["users"].find_one({"_id": ObjectId(current_user["user_id"])})
+    
+    # Call ML service for predictions (async)
+    ml_result = await call_ml_service(complaint_data.text)
+    
+    # Auto-assign department based on category using mapping
+    department = CATEGORY_TO_DEPT.get(complaint_data.category, complaint_data.department)
+    
+    # Find department admin for auto-routing
+    dept_admin = db["users"].find_one({
+        "role": "admin",
+        "department": department
+    })
     
     # Create complaint document
     complaint_doc = {
-        "citizen_id": current_user["user_id"],
+        "citizen_id": ObjectId(current_user["user_id"]),
+        "citizen_name": current_user_doc.get("name", ""),
+        "citizen_phone": current_user_doc.get("phone", ""),
         "text": complaint_data.text,
         "category": complaint_data.category,
-        "urgency": complaint_data.urgency,
-        "status": ComplaintStatus.SUBMITTED,
+        "department": department,
+        "urgency": ml_result.get("predicted_urgency", "medium"),  # Use ML prediction
+        "status": "dept_assigned" if dept_admin else "submitted",
         "sentiment": ml_result.get("sentiment"),
+        "anger_score": ml_result.get("anger_score"),
+        "compound_score": ml_result.get("compound_score"),
         "before_photo": complaint_data.before_photo,
         "after_photo": None,
-        "assigned_to": None,
+        "assigned_to": ObjectId(dept_admin["_id"]) if dept_admin else None,
         "worker_notes": [],
         "approval_notes": None,
         "deadline": None,
@@ -72,19 +91,33 @@ async def submit_complaint(
     }
     
     result = db["complaints"].insert_one(complaint_doc)
-    complaint_doc["_id"] = result.inserted_id
+    complaint_id = result.inserted_id
+    
+    # Create notification for department admin if found
+    if dept_admin:
+        notification_doc = {
+            "user_id": ObjectId(dept_admin["_id"]),
+            "type": "new_complaint",
+            "title": f"New complaint: {complaint_data.category}",
+            "message": f"Complaint #{str(complaint_id)[-6:].upper()} from {current_user_doc.get('name', 'Citizen')}",
+            "complaint_id": complaint_id,
+            "read": False,
+            "created_at": datetime.now(timezone.utc)
+        }
+        db["notifications"].insert_one(notification_doc)
     
     return {
-        "id": str(result.inserted_id),
+        "id": str(complaint_id),
         "citizen_id": current_user["user_id"],
         "text": complaint_data.text,
         "category": complaint_data.category,
-        "urgency": complaint_data.urgency,
-        "status": ComplaintStatus.SUBMITTED,
+        "department": department,
+        "urgency": ml_result.get("predicted_urgency", "medium"),
+        "status": "dept_assigned" if dept_admin else "submitted",
         "sentiment": ml_result.get("sentiment"),
         "before_photo": complaint_data.before_photo,
         "created_at": complaint_doc["created_at"],
-        "message": "Complaint submitted successfully"
+        "message": "Complaint submitted successfully and routed to department admin"
     }
 
 
@@ -98,17 +131,16 @@ async def get_complaints(current_user: dict = Depends(get_current_user)):
     # Build query based on role
     if role == "citizen":
         # Citizens see only their own complaints
-        query = {"citizen_id": user_id}
+        query = {"citizen_id": ObjectId(user_id)}
     elif role == "worker":
         # Workers see only complaints assigned to them
-        query = {"assigned_to": user_id}
-    elif role == "admin":
-        # Admins see complaints in their department
+        query = {"assigned_to": ObjectId(user_id)}
+    elif role == "admin" or role == "dept_admin":
+        # Admins and Dept Admins see complaints in their department
         admin = db["users"].find_one({"_id": ObjectId(user_id)})
         if admin and admin.get("department"):
-            # This would require a department field in complaints
-            # For now, admins see some complaints (can be enhanced)
-            query = {}
+            # Filter by department only
+            query = {"department": admin["department"]}
         else:
             query = {}
     elif role == "superadmin":
@@ -117,7 +149,7 @@ async def get_complaints(current_user: dict = Depends(get_current_user)):
     else:
         query = {}
     
-    complaints = list(db["complaints"].find(query).limit(100))
+    complaints = list(db["complaints"].find(query).sort("created_at", -1).limit(100))
     
     # Convert ObjectId to string
     for complaint in complaints:
@@ -178,7 +210,7 @@ async def get_complaint(
 async def assign_complaint(
     complaint_id: str,
     assign_data: ComplaintAssign,
-    current_user: dict = Depends(role_required("admin", "superadmin"))
+    current_user: dict = Depends(role_required("admin", "dept_admin", "superadmin"))
 ):
     """Assign complaint to worker"""
     db = get_db()
@@ -275,7 +307,7 @@ async def complete_complaint(
 async def approve_complaint(
     complaint_id: str,
     review: ComplaintReview = None,
-    current_user: dict = Depends(role_required("admin", "superadmin"))
+    current_user: dict = Depends(role_required("admin", "dept_admin", "superadmin"))
 ):
     """Approve completed complaint"""
     db = get_db()
@@ -322,7 +354,7 @@ async def approve_complaint(
 async def reject_complaint(
     complaint_id: str,
     review: ComplaintReview,
-    current_user: dict = Depends(role_required("admin", "superadmin"))
+    current_user: dict = Depends(role_required("admin", "dept_admin", "superadmin"))
 ):
     """Reject complaint"""
     db = get_db()

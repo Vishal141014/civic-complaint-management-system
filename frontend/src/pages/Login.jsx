@@ -1,149 +1,127 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
-import { loginRequest } from '../api/auth';
+﻿import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { loginRequest } from "../api/auth";
+
+const COLORS = {
+  cream: "#F5F0E8",
+  black: "#0D0D0D",
+  gold: "#C9A84C",
+  goldDark: "#8B6914",
+  muted: "#6B6355",
+  border: "rgba(201,168,76,0.25)",
+};
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const { loginWithToken } = useAuth();
   const navigate = useNavigate();
 
   const rolePathMap = {
-    citizen: '/citizen/my-complaints',
-    admin: '/admin/dashboard',
-    dept_admin: '/admin/dashboard',
-    worker: '/worker/tasks',
-    field_worker: '/worker/tasks',
-    superadmin: '/superadmin/dashboard',
-    super_admin: '/superadmin/dashboard',
+    citizen: "/citizen/my-complaints",
+    admin: "/admin/dashboard",
+    dept_admin: "/admin/dashboard",
+    worker: "/worker/tasks",
+    field_worker: "/worker/tasks",
+    superadmin: "/superadmin/dashboard",
+    super_admin: "/superadmin/dashboard",
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       if (!email || !password) {
-        setError('Email and password are required');
+        setError("Email and password are required");
         setLoading(false);
         return;
       }
 
-      // Call backend API for login
       const response = await loginRequest(email, password);
       const { id, name, role, access_token } = response.data;
 
-      // Store in auth context using loginWithToken
-      loginWithToken(access_token, { name, id, email }, role);
-
-      // Navigate to appropriate dashboard
-      navigate(rolePathMap[role] || '/');
+      loginWithToken(access_token, { name, id, email, role }, role);
+      navigate(rolePathMap[role] || "/");
     } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
+      setError(err.response?.data?.detail || err.response?.data?.message || "Invalid credentials");
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-950 to-navy-900 flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md"
+    <div
+      style={{
+        minHeight: "100vh",
+        paddingTop: "70px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: COLORS.cream,
+        padding: "70px 24px 24px 24px",
+      }}
+    >
+      <style>{`
+        html { scroll-behavior: smooth; }
+        * { box-sizing: border-box; }
+      `}</style>
+
+      <div
+        style={{
+          maxWidth: "440px",
+          width: "100%",
+          background: "#FFFFFF",
+          border: `1px solid ${COLORS.border}`,
+          padding: "48px",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
+        }}
       >
-        {/* Card */}
-        <div className="rounded-3xl backdrop-blur-xl bg-white/10 border border-white/20 p-8">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8"
-          >
-            <h1 className="text-4xl font-bold text-white font-syne mb-2">
-              Civic Complaints
-            </h1>
-            <p className="text-white/80">Smart Platform for Citizen Complaints</p>
-          </motion.div>
+        <div style={{ width: "48px", height: "1px", background: COLORS.gold, margin: "0 auto 32px" }} />
+        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "36px", fontWeight: 700, color: COLORS.black, textAlign: "center", marginBottom: "8px" }}>
+          Welcome Back
+        </h2>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "14px", color: COLORS.muted, textAlign: "center", marginBottom: "40px" }}>
+          Sign in to your account
+        </p>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <label className="block text-sm font-bold text-white mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="user@example.com"
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:border-saffron focus:ring-2 focus:ring-saffron/20 transition-all"
-              />
-            </motion.div>
+        {error && (
+          <div style={{ background: "rgba(220,38,38,0.1)", color: "#DC2626", padding: "12px 16px", borderRadius: "4px", marginBottom: "24px", fontFamily: "'DM Sans', sans-serif", fontSize: "13px", textAlign: "center" }}>
+            {error}
+          </div>
+        )}
 
-            {/* Password */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <label className="block text-sm font-bold text-white mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:border-saffron focus:ring-2 focus:ring-saffron/20 transition-all"
-              />
-            </motion.div>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <div>
+            <label style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "11px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: COLORS.goldDark, display: "block", marginBottom: "8px" }}>
+              Email Address
+            </label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: "100%", height: "48px", background: "transparent", border: "none", borderBottom: `1px solid ${COLORS.gold}`, fontFamily: "'DM Sans', sans-serif", fontSize: "14px", color: COLORS.black, padding: "0 0 8px 0", transition: "all 0.3s ease", outline: "none" }} onFocus={(e) => (e.target.style.borderBottomColor = COLORS.goldDark)} onBlur={(e) => (e.target.style.borderBottomColor = COLORS.gold)} placeholder="your@email.com" />
+          </div>
 
-            {/* Error Message */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-red-500/20 border border-red-500/50 rounded-xl p-3 text-red-200 text-sm"
-              >
-                {error}
-              </motion.div>
-            )}
+          <div>
+            <label style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "11px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: COLORS.goldDark, display: "block", marginBottom: "8px" }}>
+              Password
+            </label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: "100%", height: "48px", background: "transparent", border: "none", borderBottom: `1px solid ${COLORS.gold}`, fontFamily: "'DM Sans', sans-serif", fontSize: "14px", color: COLORS.black, padding: "0 0 8px 0", transition: "all 0.3s ease", outline: "none" }} onFocus={(e) => (e.target.style.borderBottomColor = COLORS.goldDark)} onBlur={(e) => (e.target.style.borderBottomColor = COLORS.gold)} placeholder="••••••••" />
+          </div>
 
-            {/* Submit Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={loading}
-              type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-saffron to-orange-600 text-white font-bold transition-all disabled:opacity-50 mt-6"
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </motion.button>
-          </form>
+          <button type="submit" disabled={loading} style={{ width: "100%", height: "52px", background: COLORS.black, color: COLORS.gold, border: "none", fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase", cursor: loading ? "not-allowed" : "pointer", transition: "all 0.3s ease", opacity: loading ? 0.7 : 1, marginTop: "8px" }} onMouseEnter={(e) => { if (!loading) { e.target.style.background = COLORS.gold; e.target.style.color = COLORS.black; } }} onMouseLeave={(e) => { if (!loading) { e.target.style.background = COLORS.black; e.target.style.color = COLORS.gold; } }} >
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
 
-          {/* Demo Info */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mt-8 pt-6 border-t border-white/10 text-center"
-          >
-            <p className="text-xs text-navy-400 mb-2">Demo Credentials:</p>
-            <p className="text-xs text-navy-300 font-mono mb-1">Phone: Any number</p>
-            <p className="text-xs text-navy-300 font-mono">Password: Any password</p>
-          </motion.div>
-        </div>
-      </motion.div>
+        <p style={{ textAlign: "center", fontFamily: "'DM Sans', sans-serif", fontSize: "13px", color: COLORS.muted, marginTop: "24px" }}>
+          Don't have an account?{" "}
+          <a href="#" onClick={(e) => { e.preventDefault(); navigate("/register"); }} style={{ color: COLORS.goldDark, textDecoration: "none", fontWeight: 600, cursor: "pointer" }} onMouseEnter={(e) => (e.target.style.textDecoration = "underline")} onMouseLeave={(e) => (e.target.style.textDecoration = "none")} >
+            Register here
+          </a>
+        </p>
+      </div>
     </div>
   );
 };

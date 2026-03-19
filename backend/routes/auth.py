@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Header, Depends
 from pydantic import EmailStr
 from passlib.context import CryptContext
 from datetime import datetime, timezone
@@ -6,7 +6,7 @@ from bson import ObjectId
 
 from db.connection import get_db
 from models.user import UserCreate, UserLogin, UserRole
-from middleware.auth_middleware import create_access_token
+from middleware.auth_middleware import create_access_token, verify_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -26,8 +26,15 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 @router.post("/register")
 async def register(user_data: UserCreate):
-    """Register new user"""
+    """Register new user - only citizen and worker roles allowed"""
     db = get_db()
+    
+    # Only allow citizen and worker roles
+    if user_data.role not in [UserRole.CITIZEN, UserRole.WORKER]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only citizen and worker roles can self-register"
+        )
     
     # Check if user already exists
     existing_user = db["users"].find_one({"email": user_data.email})
@@ -52,20 +59,15 @@ async def register(user_data: UserCreate):
     result = db["users"].insert_one(user_doc)
     user_id = str(result.inserted_id)
     
-    # Create access token
-    access_token = create_access_token(
-        user_id=user_id,
-        email=user_data.email,
-        role=user_data.role or UserRole.CITIZEN
-    )
-    
     return {
+        "success": True,
+        "message": "Registration successful",
         "id": user_id,
         "name": user_data.name,
         "email": user_data.email,
+        "phone": user_data.phone,
         "role": user_data.role or UserRole.CITIZEN,
-        "access_token": access_token,
-        "token_type": "bearer"
+        "department": user_data.department,
     }
 
 
@@ -100,7 +102,36 @@ async def login(credentials: UserLogin):
         "id": str(user["_id"]),
         "name": user["name"],
         "email": user["email"],
+        "phone": user.get("phone", ""),
         "role": user["role"],
+        "department": user.get("department"),
         "access_token": access_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "message": "Login successful"
+    }
+
+
+@router.get("/me")
+async def get_current_user(current_user: dict = Depends(verify_token)):
+    """Get current user info from token"""
+    db = get_db()
+    
+    # Find user by ID from token
+    user = db["users"].find_one({"_id": ObjectId(current_user["user_id"])})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+    
+    return {
+        "user": {
+            "id": str(user["_id"]),
+            "name": user["name"],
+            "email": user["email"],
+            "phone": user.get("phone", ""),
+            "role": user["role"],
+            "department": user.get("department"),
+        },
+        "role": user["role"]
     }

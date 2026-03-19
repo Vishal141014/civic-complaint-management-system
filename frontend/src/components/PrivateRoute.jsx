@@ -2,14 +2,14 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const PrivateRoute = ({ children, allowedRoles = [] }) => {
-  const { isAuthenticated, role, loading } = useAuth();
+  const { isAuthenticated, role, isVerifying } = useAuth();
 
-  if (loading) {
+  if (isVerifying) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-navy-900 to-navy-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-gray-100 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-saffron/20 border-t-saffron rounded-full animate-spin"></div>
-          <p className="text-navy-300 font-syne">Loading...</p>
+          <div className="w-12 h-12 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div>
+          <p className="text-zinc-700 font-semibold">Loading...</p>
         </div>
       </div>
     );
@@ -20,7 +20,17 @@ const PrivateRoute = ({ children, allowedRoles = [] }) => {
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(role)) {
-    return <Navigate to="/unauthorized" replace />;
+    // Redirect to their own dashboard if they try to access wrong role
+    const rolePathMap = {
+      citizen: '/citizen/my-complaints',
+      admin: '/admin/dashboard',
+      dept_admin: '/admin/dashboard',
+      worker: '/worker/tasks',
+      field_worker: '/worker/tasks',
+      superadmin: '/superadmin/dashboard',
+      super_admin: '/superadmin/dashboard',
+    };
+    return <Navigate to={rolePathMap[role] || '/unauthorized'} replace />;
   }
 
   return children;

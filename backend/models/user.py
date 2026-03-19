@@ -8,6 +8,7 @@ from bson import ObjectId
 class UserRole(str, Enum):
     CITIZEN = "citizen"
     ADMIN = "admin"
+    DEPT_ADMIN = "dept_admin"
     WORKER = "worker"
     SUPERADMIN = "superadmin"
 

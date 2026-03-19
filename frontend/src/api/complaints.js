@@ -1,65 +1,86 @@
-import axios from 'axios';
-import { buildAuthHeader } from './auth';
+import axiosInstance from '../config/axios';
+import API from '../config/api';
 
-const API_BASE_URL = 'http://localhost:8000';
-
-const complaintsApi = axios.create({
-  baseURL: API_BASE_URL,
-});
-
-export const submitComplaint = (data, token) => {
-  return complaintsApi.post('/complaints/submit', data, {
-    headers: buildAuthHeader(token),
-  });
+/**
+ * Submit a new complaint
+ * @param {object} data - Complaint data
+ * @returns {Promise} Response with created complaint
+ */
+export const submitComplaint = (data) => {
+  return axiosInstance.post(API.SUBMIT, data);
 };
 
-export const getComplaints = (filters = {}, token) => {
-  return complaintsApi.get('/complaints', {
+/**
+ * Get all complaints with optional filters
+ * @param {object} filters - Query filters
+ * @returns {Promise} Response with complaints list
+ */
+export const getComplaints = (filters = {}) => {
+  return axiosInstance.get(API.GET_ALL, {
     params: filters,
-    headers: buildAuthHeader(token),
   });
 };
 
-export const assignComplaint = (id, data, token) => {
-  return complaintsApi.put(`/complaints/${id}/assign`, data, {
-    headers: buildAuthHeader(token),
-  });
+/**
+ * Assign complaint to worker
+ * @param {string} id - Complaint ID
+ * @param {object} data - Assignment data
+ * @returns {Promise} Response confirmation
+ */
+export const assignComplaint = (id, data) => {
+  return axiosInstance.put(API.ASSIGN(id), data);
 };
 
-export const approveComplaint = (id, token) => {
-  return complaintsApi.put(
-    `/complaints/${id}/approve`,
-    {},
-    {
-      headers: buildAuthHeader(token),
-    }
-  );
+/**
+ * Mark complaint as complete
+ * @param {string} id - Complaint ID
+ * @returns {Promise} Response confirmation
+ */
+export const completeComplaint = (id) => {
+  return axiosInstance.put(API.COMPLETE(id), {});
 };
 
-export const rejectComplaint = (id, token) => {
-  return complaintsApi.put(
-    `/complaints/${id}/reject`,
-    {},
-    {
-      headers: buildAuthHeader(token),
-    }
-  );
+/**
+ * Approve complaint
+ * @param {string} id - Complaint ID
+ * @returns {Promise} Response confirmation
+ */
+export const approveComplaint = (id) => {
+  return axiosInstance.put(API.APPROVE(id), {});
 };
 
-export const reraiseComplaint = (id, data, token) => {
-  return complaintsApi.post(`/complaints/${id}/reraise`, data, {
-    headers: buildAuthHeader(token),
-  });
+/**
+ * Reject complaint
+ * @param {string} id - Complaint ID
+ * @returns {Promise} Response confirmation
+ */
+export const rejectComplaint = (id) => {
+  return axiosInstance.put(API.REJECT(id), {});
 };
 
-export const uploadPhoto = (file, type, token) => {
+/**
+ * Re-raise complaint
+ * @param {string} id - Complaint ID
+ * @param {object} data - Re-raise data
+ * @returns {Promise} Response with new complaint
+ */
+export const reraiseComplaint = (id, data) => {
+  return axiosInstance.post(API.RERAISE(id), data);
+};
+
+/**
+ * Upload photo for complaint
+ * @param {File} file - File object
+ * @param {string} type - Photo type ('before' or 'after')
+ * @returns {Promise} Response with photo URL
+ */
+export const uploadPhoto = (file, type) => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('type', type);
 
-  return complaintsApi.post('/uploads/photo', formData, {
+  return axiosInstance.post(API.UPLOAD_PHOTO, formData, {
     headers: {
-      ...buildAuthHeader(token),
       'Content-Type': 'multipart/form-data',
     },
   });

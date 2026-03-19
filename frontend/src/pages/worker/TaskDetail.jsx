@@ -1,144 +1,174 @@
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import PageHeader from '../../components/PageHeader';
-import StatusBadge from '../../components/StatusBadge';
 
 const TaskDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [workNotes, setWorkNotes] = useState('');
-  const [saving, setSaving] = useState(false);
 
+  // Mock data - In real app, fetch from API
   const task = {
     id: id,
-    category: 'Road Damage',
-    address: '123 Main Street, Downtown',
-    description: 'Large pothole causing accidents',
-    deadline: '2024-01-25',
+    title: 'Paani Nahi Aa Raha',
+    location: 'Sector 7, Rohini - Gate No.3 ke paas',
+    description: 'Tap se pani nahi aa raha, line pressure low hai',
+    urgency: 'HIGH',
+    assignedDate: '22 Feb 2026, 9:00 AM',
+    deadline: '25 Feb 2026',
     status: 'assigned',
-    citizenName: 'John Doe',
-    beforePhoto: 'https://via.placeholder.com/400x300?text=Before',
-  };
-
-  const handleSaveNotes = async () => {
-    setSaving(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSaving(false);
-    } catch (err) {
-      console.error('Save failed:', err);
-      setSaving(false);
-    }
+    citizenPhoto: '🚰',
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="pb-12"
-    >
-      <PageHeader
-        title="Task Details"
-        subtitle={`Complaint ID: ${task.id}`}
-      />
-
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Task Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-3xl backdrop-blur-xl bg-white/10 border border-white/20 p-8"
+    <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-gray-100 p-6">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="max-w-3xl mx-auto"
+      >
+        {/* Back Button */}
+        <motion.button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-zinc-600 hover:text-zinc-900 mb-6 font-medium"
         >
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <p className="text-sm text-navy-400">Category</p>
-              <p className="text-xl font-bold text-white">{task.category}</p>
-            </div>
-            <div>
-              <p className="text-sm text-navy-400">Status</p>
-              <StatusBadge status={task.status} />
-            </div>
-            <div>
-              <p className="text-sm text-navy-400">Deadline</p>
-              <p className="text-white">{new Date(task.deadline).toLocaleDateString()}</p>
-            </div>
-            <div>
-              <p className="text-sm text-navy-400">Citizen</p>
-              <p className="text-white">{task.citizenName}</p>
-            </div>
-          </div>
+          ← Back to Tasks
+        </motion.button>
 
-          <div>
-            <p className="text-sm text-navy-400 mb-2">Location</p>
-            <p className="text-white">{task.address}</p>
-          </div>
-
-          <div className="mt-4">
-            <p className="text-sm text-navy-400 mb-2">Issue Description</p>
-            <p className="text-white">{task.description}</p>
-          </div>
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold text-zinc-900 mb-2">
+            👁️ Task Details
+          </h1>
+          <p className="text-zinc-600 text-lg">
+            Problem ki complete details dekho aur kaam karo
+          </p>
         </motion.div>
 
-        {/* Before Photo */}
+        {/* Problem Details Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-3xl backdrop-blur-xl bg-white/10 border border-white/20 p-8"
+          className="bg-white rounded-2xl border border-zinc-200 p-8 shadow-sm mb-8"
         >
-          <h3 className="text-2xl font-bold text-white mb-4">Current Situation</h3>
-          <img src={task.beforePhoto} alt="Current" className="w-full rounded-xl" />
+          <div className="space-y-6">
+            {/* Complaint ID */}
+            <div>
+              <p className="text-zinc-500 text-sm font-mono uppercase tracking-wider mb-2">
+                Complaint ID
+              </p>
+              <p className="text-3xl font-bold text-zinc-900">#{task.id}</p>
+            </div>
+
+            {/* Problem Title */}
+            <div>
+              <p className="text-zinc-500 text-sm font-mono uppercase tracking-wider mb-2">
+                Samasyaa Kya Hai?
+              </p>
+              <p className="text-2xl font-bold text-zinc-900">{task.title}</p>
+            </div>
+
+            {/* Location */}
+            <div>
+              <p className="text-zinc-500 text-sm font-mono uppercase tracking-wider mb-2">
+                Jagah / Ward
+              </p>
+              <p className="text-lg text-zinc-900">📍 {task.location}</p>
+            </div>
+
+            {/* Description */}
+            <div>
+              <p className="text-zinc-500 text-sm font-mono uppercase tracking-wider mb-2">
+                Problem Description
+              </p>
+              <p className="text-zinc-900 leading-relaxed text-base">
+                {task.description}
+              </p>
+            </div>
+
+            {/* Urgency & Dates Grid */}
+            <div className="grid md:grid-cols-3 gap-6 pt-6 border-t border-zinc-200">
+              <div>
+                <p className="text-zinc-500 text-sm font-mono uppercase tracking-wider mb-2">
+                  Urgency
+                </p>
+                <p className="text-lg font-bold text-red-600">🔴 HIGH PRIORITY</p>
+              </div>
+              <div>
+                <p className="text-zinc-500 text-sm font-mono uppercase tracking-wider mb-2">
+                  Assigned
+                </p>
+                <p className="text-zinc-900">{task.assignedDate}</p>
+              </div>
+              <div>
+                <p className="text-zinc-500 text-sm font-mono uppercase tracking-wider mb-2">
+                  Deadline
+                </p>
+                <p className="text-zinc-900">{task.deadline}</p>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
-        {/* Work Notes */}
+        {/* Citizen Uploaded Photo */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-3xl backdrop-blur-xl bg-white/10 border border-white/20 p-8"
+          className="bg-white rounded-2xl border border-zinc-200 p-8 shadow-sm mb-8"
         >
-          <h3 className="text-2xl font-bold text-white mb-4">Work Notes</h3>
-          <textarea
-            value={workNotes}
-            onChange={(e) => setWorkNotes(e.target.value)}
-            placeholder="Document your work progress, challenges, and next steps..."
-            rows={6}
-            className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-navy-400 focus:border-saffron focus:ring-2 focus:ring-saffron/20 resize-none"
-          />
+          <h3 className="text-xl font-bold text-zinc-900 mb-6">
+            Current Situation - Citizen Ne Upload Kiya Tha
+          </h3>
+
+          <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-12 flex items-center justify-center border-2 border-dashed border-red-200">
+            <div className="text-center">
+              <div className="text-6xl mb-4">{task.citizenPhoto}</div>
+              <p className="text-zinc-700 font-semibold">
+                Citizen ka photo
+              </p>
+              <p className="text-zinc-500 text-sm mt-2">
+                Tap to view full image
+              </p>
+            </div>
+          </div>
+
+          <p className="text-zinc-600 text-sm mt-4 text-center">
+            Iske base par apna kaam karo aur finished work ka photo upload karo
+          </p>
+        </motion.div>
+
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="flex gap-4 flex-col sm:flex-row"
+        >
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={handleSaveNotes}
-            disabled={saving}
-            className="mt-4 px-6 py-3 rounded-xl bg-saffron/20 text-saffron font-bold hover:bg-saffron/30 transition-all disabled:opacity-50"
+            onClick={() => navigate(-1)}
+            className="flex-1 px-6 py-3 rounded-lg border-2 border-zinc-300 text-zinc-700 font-bold hover:bg-zinc-50 transition-all"
           >
-            {saving ? 'Saving...' : '💾 Save Notes'}
+            ← Back to Tasks
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate(`/worker/upload/${task.id}`)}
+            className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-green-500 to-green-600 text-white font-bold hover:shadow-lg transition-all"
+          >
+            📸 Upload Finished Work
           </motion.button>
         </motion.div>
-
-        {/* Actions */}
-        <div className="flex gap-4 flex-wrap">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/worker/tasks')}
-            className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-bold hover:bg-white/20"
-          >
-            ← Back
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(`/worker/upload/${task.id}`)}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-600 to-green-700 text-white font-bold hover:from-green-700 hover:to-green-800"
-          >
-            📸 Upload Completion Photos
-          </motion.button>
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 

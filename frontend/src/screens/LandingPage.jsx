@@ -81,7 +81,7 @@ const LandingPage = () => {
               {/* Description */}
               <motion.p
                 variants={itemVariants}
-                className="text-lg text-white/60 leading-relaxed max-w-md"
+                className="text-lg text-white/75 leading-relaxed max-w-md"
               >
                 Smart Political CRM — AI-powered complaint management for faster, transparent civic
                 governance. Hindi, English, aur Hinglish mein complaint karo.
@@ -115,7 +115,7 @@ const LandingPage = () => {
                         {stat.value.split(stat.unit)[0]}
                         <span className="text-saffron text-xl ml-1">{stat.unit}</span>
                       </div>
-                      <p className="text-xs text-white/40 font-mono uppercase tracking-wider mt-2">
+                      <p className="text-xs text-white/60 font-mono uppercase tracking-wider mt-2">
                         {stat.label}
                       </p>
                     </motion.div>
@@ -157,7 +157,7 @@ const LandingPage = () => {
                       <span className="text-3xl">{item.emoji}</span>
                       <div className="flex-1">
                         <p className="text-white text-sm font-bold">{item.title}</p>
-                        <p className="text-white/40 text-xs font-mono">{item.sub}</p>
+                        <p className="text-white/60 text-xs font-mono">{item.sub}</p>
                       </div>
                     </motion.div>
                   ))}
@@ -171,7 +171,7 @@ const LandingPage = () => {
                   ].map((stat, i) => (
                     <div key={i}>
                       <div className={`text-2xl font-bold ${stat.color}`}>{stat.num}</div>
-                      <p className="text-xs text-white/40 font-mono mt-1">{stat.label}</p>
+                      <p className="text-xs text-white/60 font-mono mt-1">{stat.label}</p>
                     </div>
                   ))}
                 </div>

@@ -5,16 +5,6 @@ from enum import Enum
 from bson import ObjectId
 
 
-class ComplaintCategory(str, Enum):
-    POTHOLE = "pothole"
-    STREETLIGHT = "streetlight"
-    GARBAGE = "garbage"
-    WATER_LEAK = "water_leak"
-    TRAFFIC_SIGNAL = "traffic_signal"
-    PUBLIC_AMENITY = "public_amenity"
-    OTHER = "other"
-
-
 class ComplaintUrgency(str, Enum):
     LOW = "low"
     MEDIUM = "medium"
@@ -34,12 +24,13 @@ class ComplaintStatus(str, Enum):
 
 class ComplaintBase(BaseModel):
     text: str
-    category: ComplaintCategory
+    category: str
     urgency: ComplaintUrgency = ComplaintUrgency.MEDIUM
 
 
 class ComplaintSubmit(ComplaintBase):
     before_photo: Optional[str] = None
+    department: Optional[str] = None
 
 
 class ComplaintAssign(BaseModel):

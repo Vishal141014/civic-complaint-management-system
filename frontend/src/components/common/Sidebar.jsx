@@ -7,7 +7,7 @@ const SidebarItem = ({ icon, label, badge, active = false, onClick }) => (
     className={`w-full flex items-center gap-3 px-5 py-3 text-sm font-bold transition-all border-l-4 ${
       active
         ? 'bg-saffron/10 border-saffron text-saffron'
-        : 'text-white/50 border-transparent hover:text-white/75 hover:bg-white/5'
+        : 'text-white/70 border-transparent hover:text-white hover:bg-white/5'
     }`}
   >
     <span className="text-lg">{icon}</span>
@@ -21,7 +21,7 @@ const SidebarItem = ({ icon, label, badge, active = false, onClick }) => (
 );
 
 const SidebarSection = ({ title }) => (
-  <div className="px-5 py-3 text-xs font-mono font-bold text-white/25 uppercase tracking-widest">
+  <div className="px-5 py-3 text-xs font-mono font-bold text-white/60 uppercase tracking-widest">
     {title}
   </div>
 );
@@ -36,7 +36,7 @@ const Sidebar = ({ items, title, subtitle, activeItem, onItemClick }) => (
     {title && (
       <div className="px-5 py-6 border-b border-white/10">
         <h3 className="text-white font-bold text-base">{title}</h3>
-        {subtitle && <p className="text-xs text-white/40 font-mono mt-1">{subtitle}</p>}
+        {subtitle && <p className="text-xs text-white/60 font-mono mt-1">{subtitle}</p>}
       </div>
     )}
 

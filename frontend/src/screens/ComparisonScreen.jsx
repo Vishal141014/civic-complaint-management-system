@@ -36,22 +36,22 @@ const ComparisonScreen = () => {
             className="bg-navy rounded-2xl p-6 flex items-center gap-8 flex-wrap text-white"
           >
             <div>
-              <p className="text-xs font-mono text-white/50 mb-1">COMPLAINT ID</p>
+              <p className="text-xs font-mono text-white/70 mb-1">COMPLAINT ID</p>
               <h3 className="text-2xl font-bold">#4815</h3>
             </div>
             <div className="w-px h-12 bg-white/10" />
             <div>
-              <p className="text-xs font-mono text-white/50 mb-1">ISSUE</p>
+              <p className="text-xs font-mono text-white/70 mb-1">ISSUE</p>
               <h3 className="font-bold">💡 Street Light Band Hai</h3>
             </div>
             <div className="w-px h-12 bg-white/10" />
             <div>
-              <p className="text-xs font-mono text-white/50 mb-1">WORKER</p>
+              <p className="text-xs font-mono text-white/70 mb-1">WORKER</p>
               <h3 className="font-bold">👷 Suresh Kumar</h3>
             </div>
             <div className="w-px h-12 bg-white/10" />
             <div>
-              <p className="text-xs font-mono text-white/50 mb-1">AREA</p>
+              <p className="text-xs font-mono text-white/70 mb-1">AREA</p>
               <h3 className="font-bold">📍 Park Lane, Ward 14</h3>
             </div>
             <StatusPill status="review" className="ml-auto">

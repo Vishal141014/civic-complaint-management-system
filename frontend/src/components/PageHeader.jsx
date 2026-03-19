@@ -9,11 +9,11 @@ const PageHeader = ({ title, subtitle, actionButton }) => {
     >
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white font-syne">
+          <h1 className="text-4xl md:text-5xl font-bold text-zinc-900 font-syne">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-navy-300 text-lg mt-2 font-syne">{subtitle}</p>
+            <p className="text-zinc-600 text-lg mt-2 font-syne">{subtitle}</p>
           )}
         </div>
         {actionButton && <div>{actionButton}</div>}
